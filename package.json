@@ -1,0 +1,269 @@
+{
+  "name": "rust-explorer",
+  "displayName": "Rust Explorer",
+  "description": "An explorer view that nests Rust files by module convention: foo.rs expands into the submodules living in foo/.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "publisher": "justinperkey",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JustinPerkey/RustExplorer.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "rust",
+    "explorer",
+    "module",
+    "file nesting",
+    "tree view"
+  ],
+  "activationEvents": [
+    "onLanguage:rust",
+    "workspaceContains:**/Cargo.toml"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "rustExplorer.modules",
+          "name": "Rust Modules",
+          "contextualTitle": "Rust Modules",
+          "icon": "$(symbol-namespace)"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "rustExplorer.modules",
+        "contents": "No Rust files were found in the open folders.\n\nOpen a folder that contains a Cargo project to see its modules nested by `mod` convention.\n[Open Folder](command:workbench.action.files.openFolder)"
+      }
+    ],
+    "commands": [
+      {
+        "command": "rustExplorer.refresh",
+        "title": "Refresh",
+        "category": "Rust Explorer",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "rustExplorer.revealActiveEditor",
+        "title": "Reveal Active File",
+        "category": "Rust Explorer",
+        "icon": "$(target)"
+      },
+      {
+        "command": "rustExplorer.newModule",
+        "title": "New Module...",
+        "category": "Rust Explorer",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "rustExplorer.renameModule",
+        "title": "Rename...",
+        "category": "Rust Explorer"
+      },
+      {
+        "command": "rustExplorer.deleteModule",
+        "title": "Delete",
+        "category": "Rust Explorer"
+      },
+      {
+        "command": "rustExplorer.declareModule",
+        "title": "Add `mod` Declaration",
+        "category": "Rust Explorer",
+        "icon": "$(add)"
+      },
+      {
+        "command": "rustExplorer.openToSide",
+        "title": "Open to the Side",
+        "category": "Rust Explorer"
+      },
+      {
+        "command": "rustExplorer.revealInFileExplorer",
+        "title": "Reveal in Explorer View",
+        "category": "Rust Explorer"
+      },
+      {
+        "command": "rustExplorer.copyPath",
+        "title": "Copy Path",
+        "category": "Rust Explorer"
+      },
+      {
+        "command": "rustExplorer.copyRelativePath",
+        "title": "Copy Relative Path",
+        "category": "Rust Explorer"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "rustExplorer.newModule",
+          "when": "view == rustExplorer.modules",
+          "group": "navigation@1"
+        },
+        {
+          "command": "rustExplorer.revealActiveEditor",
+          "when": "view == rustExplorer.modules",
+          "group": "navigation@2"
+        },
+        {
+          "command": "rustExplorer.refresh",
+          "when": "view == rustExplorer.modules",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "rustExplorer.declareModule",
+          "when": "view == rustExplorer.modules && viewItem =~ /undeclared/",
+          "group": "inline"
+        },
+        {
+          "command": "rustExplorer.newModule",
+          "when": "view == rustExplorer.modules && viewItem =~ /^(module|directory|workspace)/",
+          "group": "1_new@1"
+        },
+        {
+          "command": "rustExplorer.openToSide",
+          "when": "view == rustExplorer.modules && viewItem =~ /^(module|file)/",
+          "group": "2_open@1"
+        },
+        {
+          "command": "rustExplorer.revealInFileExplorer",
+          "when": "view == rustExplorer.modules",
+          "group": "2_open@2"
+        },
+        {
+          "command": "rustExplorer.declareModule",
+          "when": "view == rustExplorer.modules && viewItem =~ /undeclared/",
+          "group": "3_modify@1"
+        },
+        {
+          "command": "rustExplorer.renameModule",
+          "when": "view == rustExplorer.modules && viewItem =~ /^(module|directory|file)/",
+          "group": "3_modify@2"
+        },
+        {
+          "command": "rustExplorer.deleteModule",
+          "when": "view == rustExplorer.modules && viewItem =~ /^(module|directory|file)/",
+          "group": "3_modify@3"
+        },
+        {
+          "command": "rustExplorer.copyPath",
+          "when": "view == rustExplorer.modules",
+          "group": "4_copy@1"
+        },
+        {
+          "command": "rustExplorer.copyRelativePath",
+          "when": "view == rustExplorer.modules",
+          "group": "4_copy@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Rust Explorer",
+      "properties": {
+        "rustExplorer.nestCrateRoot": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Nest a crate's top-level modules underneath its root file. In a `src` directory, `lib.rs` (or `main.rs`) becomes the parent of the sibling modules it declares."
+        },
+        "rustExplorer.hideModRs": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Hide `mod.rs` inside its own module directory. The directory node itself opens `mod.rs`, so the file is still one click away."
+        },
+        "rustExplorer.labelStyle": {
+          "type": "string",
+          "default": "module",
+          "enum": [
+            "module",
+            "file"
+          ],
+          "enumDescriptions": [
+            "Show the module name, e.g. `parser`.",
+            "Show the file name, e.g. `parser.rs`."
+          ],
+          "description": "How module rows are labelled."
+        },
+        "rustExplorer.showNonRustFiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show files that are not Rust sources (Cargo.toml, README.md, ...) alongside modules."
+        },
+        "rustExplorer.markUndeclaredModules": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Mark `.rs` files that the owning module never declares with `mod <name>;`. These files are not compiled into the crate."
+        },
+        "rustExplorer.sortOrder": {
+          "type": "string",
+          "default": "type",
+          "enum": [
+            "type",
+            "alphabetical",
+            "declaration"
+          ],
+          "enumDescriptions": [
+            "Modules with children first, then leaf modules, then other files.",
+            "Everything sorted by name.",
+            "Modules in the order their `mod` declarations appear in the owning file."
+          ],
+          "description": "How children are ordered inside a module."
+        },
+        "rustExplorer.moduleVisibility": {
+          "type": "string",
+          "default": "private",
+          "enum": [
+            "private",
+            "pub",
+            "pub(crate)",
+            "pub(super)"
+          ],
+          "markdownDescription": "Visibility used for the `mod` declaration written by **New Module**."
+        },
+        "rustExplorer.followActiveEditor": {
+          "type": "boolean",
+          "default": true,
+          "description": "Reveal and select the active editor's file in the Rust Modules view."
+        },
+        "rustExplorer.exclude": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "default": {
+            "**/target": true,
+            "**/.git": true,
+            "**/node_modules": true
+          },
+          "markdownDescription": "Glob patterns hidden from the Rust Modules view, matched against workspace-relative paths."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext .ts",
+    "test": "npm run compile && node --test \"out/test/**/*.test.js\"",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.3"
+  }
+}
