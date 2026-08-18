@@ -1,5 +1,7 @@
 # Rust Explorer
 
+[![CI](https://github.com/JustinPerkey/RustExplorer/actions/workflows/ci.yml/badge.svg)](https://github.com/JustinPerkey/RustExplorer/actions/workflows/ci.yml)
+
 A VS Code extension that shows your files the way Rust sees them: `parser.rs` expands
 into the submodules that live in `parser/`.
 
@@ -77,11 +79,18 @@ Press <kbd>F5</kbd> to launch an Extension Development Host. The
 **Run Extension (sample crate)** launch configuration opens `fixtures/sample-crate`,
 which contains both module layouts plus an undeclared file.
 
-Packaging a `.vsix` needs `@vscode/vsce`:
+Packaging a `.vsix` uses `@vscode/vsce`, which is installed as a dev dependency:
 
 ```sh
-npx @vscode/vsce package
+npm run package
 ```
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request against `main` and on every push
+to `main` (including merges). It lints, compiles and runs the unit tests on Node 20 and
+22, then builds the `.vsix` and uploads it as a build artifact named
+`rust-explorer-<version>-vsix`, downloadable from the workflow run summary.
 
 ## How the tree is built
 
