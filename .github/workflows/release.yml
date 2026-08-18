@@ -69,8 +69,14 @@ jobs:
           EXACT: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          target="${EXACT:-$BUMP}"
-          npm version "$target" --no-git-tag-version
+          current="$(node -p "require('./package.json').version")"
+          if [ -n "$EXACT" ] && [ "$EXACT" = "$current" ]; then
+            # Releasing the version package.json already carries — e.g. the very
+            # first release. npm version would fail here with "Version not changed".
+            echo "package.json is already at $current; releasing it as-is."
+          else
+            npm version "${EXACT:-$BUMP}" --no-git-tag-version
+          fi
           version="$(node -p "require('./package.json').version")"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
@@ -102,7 +108,11 @@ jobs:
         run: |
           set -euo pipefail
           git add package.json package-lock.json CHANGELOG.md
-          git commit -m "Release v$VERSION"
+          if git diff --cached --quiet; then
+            echo "Nothing to commit; tagging the current commit."
+          else
+            git commit -m "Release v$VERSION"
+          fi
           git tag -a "$TAG" -m "v$VERSION"
           git push origin "HEAD:${GITHUB_REF_NAME}"
           git push origin "$TAG"
