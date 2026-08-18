@@ -255,7 +255,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --ext .ts",
-    "test": "npm run compile && node --test \"out/test/**/*.test.js\"",
+    "test": "npm run compile && node ./scripts/run-tests.js",
     "package": "vsce package"
   },
   "devDependencies": {
