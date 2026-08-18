@@ -92,6 +92,24 @@ to `main` (including merges). It lints, compiles and runs the unit tests on Node
 22, then builds the `.vsix` and uploads it as a build artifact named
 `rust-explorer-<version>-vsix`, downloadable from the workflow run summary.
 
+## Releasing
+
+`.github/workflows/release.yml` runs on demand (**Actions → Release → Run workflow**).
+Pick a `patch`, `minor` or `major` bump — or type an exact `version` to override it —
+and the workflow:
+
+1. lints, compiles and runs the unit tests; nothing is released unless they all pass,
+2. bumps `package.json`/`package-lock.json` and adds a `CHANGELOG.md` section for the
+   new version, built from the commit subjects since the previous tag (an existing
+   hand-written section for that version is used as-is instead),
+3. builds the `.vsix`,
+4. commits `Release v<version>`, tags `v<version>` and pushes both,
+5. creates the GitHub release with the changelog entry as its notes and the `.vsix`
+   attached.
+
+Tick `dry_run` to run the checks, the bump and the packaging without pushing or
+publishing anything.
+
 ## How the tree is built
 
 `src/model/` holds the logic and knows nothing about VS Code, which is what the unit

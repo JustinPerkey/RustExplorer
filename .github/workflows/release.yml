@@ -1,0 +1,147 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump to apply'
+        type: choice
+        required: true
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+      version:
+        description: 'Exact version to release (overrides the bump, e.g. 1.2.0)'
+        type: string
+        required: false
+        default: ''
+      dry_run:
+        description: 'Run the checks and the bump without pushing or publishing'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Bump version and publish release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The release only happens if everything below passes — same gate as CI.
+      - name: Lint
+        run: npm run lint
+
+      - name: Compile
+        run: npm run compile
+
+      - name: Test
+        run: npm test
+
+      - name: Configure git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Bump version
+        id: bump
+        env:
+          BUMP: ${{ inputs.bump }}
+          EXACT: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          target="${EXACT:-$BUMP}"
+          npm version "$target" --no-git-tag-version
+          version="$(node -p "require('./package.json').version")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing $version"
+
+      - name: Fail if the tag already exists
+        env:
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Tag $TAG already exists."
+            exit 1
+          fi
+
+      - name: Update CHANGELOG
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: node scripts/changelog.js "$VERSION" --notes-out "$RUNNER_TEMP/release-notes.md"
+
+      - name: Package extension
+        run: npm run package
+
+      - name: Commit and tag
+        if: ${{ !inputs.dry_run }}
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git add package.json package-lock.json CHANGELOG.md
+          git commit -m "Release v$VERSION"
+          git tag -a "$TAG" -m "v$VERSION"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "$TAG"
+
+      - name: Create GitHub release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.bump.outputs.version }}
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" \
+            --title "v$VERSION" \
+            --notes-file "$RUNNER_TEMP/release-notes.md" \
+            ./*.vsix
+
+      - name: Upload VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-explorer-${{ steps.bump.outputs.version }}-vsix
+          path: '*.vsix'
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Summary
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+          TAG: ${{ steps.bump.outputs.tag }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          {
+            echo "### Rust Explorer $TAG"
+            echo
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "Dry run — nothing was pushed or published."
+            else
+              echo "Released \`$VERSION\`: tag \`$TAG\` pushed and GitHub release created."
+            fi
+            echo
+            cat "$RUNNER_TEMP/release-notes.md"
+          } >> "$GITHUB_STEP_SUMMARY"
