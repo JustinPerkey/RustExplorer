@@ -2,8 +2,13 @@ import * as vscode from 'vscode';
 
 import { readConfig, type RustExplorerConfig } from '../config';
 import { ExcludeMatcher } from '../model/glob';
-import { declaredFileModules } from '../model/modDeclarations';
-import { buildDirectoryModel, type DirEntry, type NodeModel } from '../model/moduleTree';
+import { declaredFileModules, isValidModuleName } from '../model/modDeclarations';
+import {
+  IMPLICIT_ROOTS,
+  buildDirectoryModel,
+  type DirEntry,
+  type NodeModel
+} from '../model/moduleTree';
 import { RustNode } from './rustNode';
 
 const ROOT_KEY = '';
@@ -18,6 +23,7 @@ export class RustModuleTreeProvider implements vscode.TreeDataProvider<RustNode>
   private readonly childrenCache = new Map<string, RustNode[]>();
   private readonly declarationCache = new Map<string, readonly string[]>();
   private readonly crateRootCache = new Map<string, boolean>();
+  private readonly crateRootFileCache = new Map<string, string | undefined>();
 
   private config: RustExplorerConfig = readConfig();
   private excludes = new ExcludeMatcher(this.config.exclude);
@@ -28,6 +34,7 @@ export class RustModuleTreeProvider implements vscode.TreeDataProvider<RustNode>
     this.childrenCache.clear();
     this.declarationCache.clear();
     this.crateRootCache.clear();
+    this.crateRootFileCache.clear();
     this.changeEmitter.fire(undefined);
   }
 
@@ -250,6 +257,59 @@ export class RustModuleTreeProvider implements vscode.TreeDataProvider<RustNode>
 
     this.crateRootCache.set(dir.path, result);
     return result;
+  }
+
+  /**
+   * The directory a `.rs` file stands for in this view, which is where the rows
+   * it hides live: `parser/` for `parser.rs`, its own directory for a `mod.rs`,
+   * and the crate's `src` for the root that nests its siblings. `undefined` when
+   * the file's row hides nothing.
+   */
+  async coveredDirectory(file: vscode.Uri): Promise<vscode.Uri | undefined> {
+    const name = file.path.split('/').pop() ?? '';
+    if (!name.endsWith('.rs')) {
+      return undefined;
+    }
+
+    const dir = vscode.Uri.joinPath(file, '..');
+    if (name === 'mod.rs') {
+      return dir;
+    }
+
+    const stem = name.slice(0, -'.rs'.length);
+    if (!isValidModuleName(stem)) {
+      return undefined;
+    }
+
+    // A crate root owns no `lib/` of its own: it speaks for the modules that sit
+    // next to it in `src`, and only while they are nested underneath it.
+    if (IMPLICIT_ROOTS.has(stem) && (await this.isCrateSourceDir(dir))) {
+      const nests = this.config.nestCrateRoot && name === (await this.crateRootFile(dir));
+      return nests ? dir : undefined;
+    }
+
+    return vscode.Uri.joinPath(dir, stem);
+  }
+
+  /** The file a crate's top level modules are nested under: `lib.rs`, else `main.rs`. */
+  private async crateRootFile(dir: vscode.Uri): Promise<string | undefined> {
+    if (this.crateRootFileCache.has(dir.path)) {
+      return this.crateRootFileCache.get(dir.path);
+    }
+
+    let found: string | undefined;
+    for (const name of CRATE_ROOT_FILES) {
+      try {
+        await vscode.workspace.fs.stat(vscode.Uri.joinPath(dir, name));
+        found = name;
+        break;
+      } catch {
+        // Keep looking.
+      }
+    }
+
+    this.crateRootFileCache.set(dir.path, found);
+    return found;
   }
 
   private async readDeclarations(file: vscode.Uri | undefined): Promise<readonly string[] | undefined> {

@@ -204,6 +204,11 @@
           "default": true,
           "markdownDescription": "Mark `.rs` files that the owning module never declares with `mod <name>;`. These files are not compiled into the crate."
         },
+        "rustExplorer.rollUpProblems": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Roll the errors and warnings of a module's submodules up onto the module row, so a collapsed `parser.rs` shows that something under `parser/` is broken. The count also shows on the file elsewhere in VS Code."
+        },
         "rustExplorer.sortOrder": {
           "type": "string",
           "default": "type",

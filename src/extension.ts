@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 
 import { registerCommands, revealUri } from './commands';
 import { CONFIG_SECTION, readConfig } from './config';
+import { ModuleProblemDecorationProvider } from './tree/problemDecorations';
 import { RustModuleTreeProvider } from './tree/rustModuleTreeProvider';
 import type { RustNode } from './tree/rustNode';
 
@@ -14,7 +15,14 @@ export function activate(context: vscode.ExtensionContext): void {
     showCollapseAll: true
   });
 
-  context.subscriptions.push(view, provider);
+  const decorations = new ModuleProblemDecorationProvider(provider);
+
+  context.subscriptions.push(
+    view,
+    provider,
+    decorations,
+    vscode.window.registerFileDecorationProvider(decorations)
+  );
   registerCommands(context, provider, view);
 
   const refresh = debounce(() => provider.refresh(), REFRESH_DEBOUNCE_MS);
