@@ -2,7 +2,7 @@
   "name": "rust-explorer",
   "displayName": "Rust Explorer",
   "description": "An explorer view that nests Rust files by module convention: foo.rs expands into the submodules living in foo/.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "publisher": "justinperkey",
   "repository": {
