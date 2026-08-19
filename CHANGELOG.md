@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0
+
+- **Errors and warnings roll up onto module rows.** A module row now carries the problems
+  of everything underneath it, coloured after the worst of them and badged with the count,
+  so a collapsed `parser.rs` shows that something under `parser/` is broken. Turn it off
+  with `rustExplorer.rollUpProblems`.
+- `src/lib.rs` and `src/main.rs` keep a row of their own next to a directory of the same
+  name. `src/lib/` used to absorb `src/lib.rs`, which left the crate root marked
+  `not declared` and stopped the crate's top-level modules from nesting under it.
+
 ## 0.1.0
 
 Initial release.
