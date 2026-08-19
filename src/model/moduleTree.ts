@@ -77,7 +77,7 @@ export interface BuildInput {
 }
 
 /** Files that are compiled without ever being declared by a `mod` statement. */
-const IMPLICIT_ROOTS = new Set(['lib', 'main', 'build']);
+export const IMPLICIT_ROOTS: ReadonlySet<string> = new Set(['lib', 'main', 'build']);
 
 export function moduleNameOf(fileName: string): string | undefined {
   if (!fileName.endsWith('.rs')) {

@@ -8,6 +8,7 @@ export type LabelStyle = 'module' | 'file';
 
 export interface RustExplorerConfig extends BuildOptions {
   readonly markUndeclaredModules: boolean;
+  readonly rollUpProblems: boolean;
   readonly followActiveEditor: boolean;
   readonly labelStyle: LabelStyle;
   readonly exclude: Readonly<Record<string, boolean>>;
@@ -22,6 +23,7 @@ export function readConfig(scope?: vscode.Uri): RustExplorerConfig {
     showNonRustFiles: config.get<boolean>('showNonRustFiles', true),
     sortOrder: config.get<SortOrder>('sortOrder', 'type'),
     markUndeclaredModules: config.get<boolean>('markUndeclaredModules', true),
+    rollUpProblems: config.get<boolean>('rollUpProblems', true),
     followActiveEditor: config.get<boolean>('followActiveEditor', true),
     labelStyle: config.get<LabelStyle>('labelStyle', 'module'),
     exclude: config.get<Record<string, boolean>>('exclude', {})

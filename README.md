@@ -33,6 +33,9 @@ src/                                  src/
   that opens `mod.rs` when clicked; the `mod.rs` file itself is hidden by default.
 - **Crate roots own their modules.** In a crate's `src/`, `lib.rs` (or `main.rs`)
   becomes the parent of the modules it declares, mirroring `crate::`.
+- **Errors and warnings roll up.** A module row stands in for a directory VS Code
+  cannot see, so the errors and warnings underneath it are counted onto the row: a
+  collapsed `parser` shows how many problems live under `parser/`.
 - **Undeclared files are called out.** A `.rs` file that no `mod` statement declares is
   marked `not declared`, because Rust never compiles it.
 - **Module-aware editing.** Create, rename and delete modules and the `mod` declaration,
@@ -61,6 +64,7 @@ available from the context menu.
 | `rustExplorer.labelStyle` | `module` | Label rows with the module name (`parser`) or the file name (`parser.rs`). |
 | `rustExplorer.showNonRustFiles` | `true` | Show `Cargo.toml`, `README.md` and friends alongside modules. |
 | `rustExplorer.markUndeclaredModules` | `true` | Mark `.rs` files no `mod` statement declares. |
+| `rustExplorer.rollUpProblems` | `true` | Count the errors and warnings inside a module onto its row. |
 | `rustExplorer.sortOrder` | `type` | `type`, `alphabetical`, or `declaration` (the order the `mod` statements appear in). |
 | `rustExplorer.moduleVisibility` | `private` | Visibility of `mod` declarations written by **New Module**. |
 | `rustExplorer.followActiveEditor` | `true` | Reveal the active editor's file in the view. |
