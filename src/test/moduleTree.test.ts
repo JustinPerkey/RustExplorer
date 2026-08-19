@@ -125,6 +125,59 @@ describe('buildDirectoryModel', () => {
     );
   });
 
+  it('keeps lib.rs beside a directory that merely shares its name', () => {
+    const nodes = build({
+      entries: entries('lib.rs', 'lib/', 'parser.rs', 'parser/', 'util.rs'),
+      declaredModules: ['parser', 'util'],
+      isCrateRoot: true
+    });
+
+    assert.deepEqual(
+      nodes.map((node) => `${node.kind}:${node.name}`),
+      ['directory:lib', 'module:lib']
+    );
+
+    // `src/lib/` is not the crate root's module directory: `mod` in `lib.rs`
+    // resolves against `src/`, so the two rows stay independent.
+    const lib = module(nodes, 'lib');
+    assert.equal(lib.file, 'lib.rs');
+    assert.equal(lib.directory, undefined);
+    assert.equal(lib.isCrateRoot, true);
+    assert.equal(lib.declared, undefined);
+    assert.deepEqual(
+      lib.nested.map((node) => node.name),
+      ['parser', 'util']
+    );
+  });
+
+  it('keeps main.rs and build.rs beside directories sharing their names', () => {
+    const nodes = build({
+      entries: entries('main.rs', 'main/', 'build.rs', 'build/'),
+      declaredModules: [],
+      isCrateRoot: true
+    });
+
+    assert.deepEqual(
+      nodes.map((node) => `${node.kind}:${node.name}`),
+      ['directory:build', 'directory:main', 'module:build', 'module:main']
+    );
+
+    for (const name of ['main', 'build']) {
+      assert.equal(module(nodes, name).directory, undefined, name);
+      assert.equal(module(nodes, name).isCrateRoot, true, name);
+    }
+  });
+
+  it('still nests a lib/ directory under lib.rs outside a crate root', () => {
+    const nodes = build({ entries: entries('lib.rs', 'lib/'), declaredModules: ['lib'] });
+
+    const lib = module(nodes, 'lib');
+    assert.equal(lib.directory, 'lib');
+    assert.equal(lib.isCrateRoot, false);
+    assert.equal(lib.declared, true);
+    assert.equal(nodes.filter((node) => node.kind === 'directory').length, 0);
+  });
+
   it('does not nest the crate root when the setting is off', () => {
     const nodes = build(
       { entries: entries('lib.rs', 'parser.rs'), isCrateRoot: true },

@@ -111,11 +111,17 @@ export function buildDirectoryModel(input: BuildInput, options: BuildOptions): N
     return declared.includes(name);
   };
 
+  // A crate root owns no directory of its own: the modules `src/lib.rs` declares
+  // live in `src/`, not in `src/lib/`. A directory of that name is therefore an
+  // ordinary directory, and must not swallow the crate root sitting next to it.
+  const isImplicitRoot = (name: string): boolean =>
+    Boolean(input.isCrateRoot) && IMPLICIT_ROOTS.has(name);
+
   // Directories first: a directory is absorbed by its `<name>.rs` sibling, or
   // speaks for itself through `<name>/mod.rs`.
   for (const directory of directories) {
     const sibling = `${directory}.rs`;
-    if (files.has(sibling) && isValidModuleName(directory)) {
+    if (files.has(sibling) && isValidModuleName(directory) && !isImplicitRoot(directory)) {
       claimedFiles.add(sibling);
       nodes.push({
         kind: 'module',
