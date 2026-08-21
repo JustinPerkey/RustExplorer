@@ -10,16 +10,16 @@ that sit in the *same* directory, so it cannot express the Rust module layout at
 Rust Explorer contributes its own **Rust Modules** view to the Explorer sidebar instead.
 
 ```
-src/                                  src/
-├── legacy/                           └── lib.rs
-│   ├── compat.rs                         ├── legacy            mod.rs
-│   └── mod.rs             ───▶            │   └── compat
-├── parser/                                ├── parser
-│   ├── ast.rs                             │   ├── ast
-│   └── lexer.rs                           │   └── lexer
-├── util/                                  ├── util
-│   └── text.rs                            │   └── text
-├── lib.rs                                 └── scratch          not declared
+src/                              src/
+├── legacy/                       └── lib             lib.rs
+│   ├── compat.rs                     ├── legacy      mod.rs
+│   └── mod.rs           ───▶         │   └── compat
+├── parser/                           ├── parser      parser.rs
+│   ├── ast.rs                        │   ├── ast
+│   └── lexer.rs                      │   └── lexer
+├── util/                             ├── util        util.rs
+│   └── text.rs                       │   └── text
+├── lib.rs                            └── scratch     not declared
 ├── parser.rs
 ├── scratch.rs
 └── util.rs
@@ -32,7 +32,12 @@ src/                                  src/
 - **`name/mod.rs` works too.** A directory with a `mod.rs` is shown as one module row
   that opens `mod.rs` when clicked; the `mod.rs` file itself is hidden by default.
 - **Crate roots own their modules.** In a crate's `src/`, `lib.rs` (or `main.rs`)
-  becomes the parent of the modules it declares, mirroring `crate::`.
+  becomes the parent of the modules it declares, mirroring `crate::`. `mod` there
+  resolves against `src/` itself, so there is no `src/lib/`, and new modules are
+  created next to the root.
+- **Module rows say which file they open.** A module that also stands for a directory
+  is otherwise indistinguishable from a plain folder, so the row carries the name of
+  the file behind it: `parser.rs`, or `mod.rs` for a 2015 edition module.
 - **Errors and warnings roll up.** A module row stands in for a directory VS Code
   cannot see, so the errors and warnings underneath it are counted onto the row: a
   collapsed `parser` shows how many problems live under `parser/`.
@@ -45,7 +50,7 @@ src/                                  src/
 
 | Command | What it does |
 | --- | --- |
-| `Rust Explorer: New Module...` | Creates `<name>.rs` under the selected module (creating its directory if needed) and adds `mod <name>;` to the owning file. |
+| `Rust Explorer: New Module...` | Creates `<name>.rs` where the selected module's `mod` declarations resolve — its own directory, created if needed, or the crate's `src/` for `lib.rs`/`main.rs` — and adds `mod <name>;` to it. |
 | `Rust Explorer: Rename...` | Renames the module file, its directory and its `mod` declaration together. |
 | `Rust Explorer: Delete` | Deletes the module file and its directory, and removes the `mod` declaration. |
 | `Rust Explorer: Add mod Declaration` | Declares an undeclared `.rs` file in its owning module. |
@@ -62,6 +67,7 @@ available from the context menu.
 | `rustExplorer.nestCrateRoot` | `true` | Nest a crate's top-level modules under `lib.rs`/`main.rs`. |
 | `rustExplorer.hideModRs` | `true` | Hide `mod.rs` inside its own module directory. |
 | `rustExplorer.labelStyle` | `module` | Label rows with the module name (`parser`) or the file name (`parser.rs`). |
+| `rustExplorer.showModuleFileHint` | `true` | Show the file a module row opens (`parser.rs`, `mod.rs`) next to modules that also stand for a directory. |
 | `rustExplorer.showNonRustFiles` | `true` | Show `Cargo.toml`, `README.md` and friends alongside modules. |
 | `rustExplorer.markUndeclaredModules` | `true` | Mark `.rs` files no `mod` statement declares. |
 | `rustExplorer.rollUpProblems` | `true` | Count the errors and warnings inside a module onto its row. |

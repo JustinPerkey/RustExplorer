@@ -422,13 +422,30 @@ export class RustModuleTreeProvider implements vscode.TreeDataProvider<RustNode>
 
   private descriptionOf(node: RustNode): string | undefined {
     const parts: string[] = [];
-    if (node.props.style === 'mod-rs' && this.config.labelStyle === 'module') {
-      parts.push('mod.rs');
+    const fileHint = this.fileHintOf(node);
+    if (fileHint !== undefined) {
+      parts.push(fileHint);
     }
     if (this.config.markUndeclaredModules && node.isUndeclared) {
       parts.push('not declared');
     }
     return parts.length > 0 ? parts.join(' · ') : undefined;
+  }
+
+  /**
+   * The file a module row opens, shown next to rows that also stand for a
+   * directory. `parser` and a plain `parser/` directory otherwise look the
+   * same, so the row that has code behind it says which file that is.
+   */
+  private fileHintOf(node: RustNode): string | undefined {
+    if (!node.isModule || !this.config.showModuleFileHint || !node.isExpandable) {
+      return undefined;
+    }
+    if (node.props.style === 'mod-rs') {
+      return 'mod.rs';
+    }
+    // The file style label already is the file name.
+    return this.config.labelStyle === 'file' ? undefined : `${node.name}.rs`;
   }
 
   private tooltipOf(node: RustNode): vscode.MarkdownString {
