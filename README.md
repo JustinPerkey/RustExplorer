@@ -11,15 +11,15 @@ Rust Explorer contributes its own **Rust Modules** view to the Explorer sidebar 
 
 ```
 src/                                  src/
-├── legacy/                           └── lib.rs
-│   ├── compat.rs                         ├── legacy            mod.rs
-│   └── mod.rs             ───▶            │   └── compat
-├── parser/                                ├── parser
-│   ├── ast.rs                             │   ├── ast
-│   └── lexer.rs                           │   └── lexer
-├── util/                                  ├── util
-│   └── text.rs                            │   └── text
-├── lib.rs                                 └── scratch          not declared
+├── legacy/                           └── lib               lib.rs
+│   ├── compat.rs                         ├── legacy        mod.rs
+│   └── mod.rs             ───▶           │   └── compat
+├── parser/                               ├── parser        parser.rs
+│   ├── ast.rs                            │   ├── ast
+│   └── lexer.rs                          │   └── lexer
+├── util/                                 ├── util          util.rs
+│   └── text.rs                           │   └── text
+├── lib.rs                                └── scratch       not declared
 ├── parser.rs
 ├── scratch.rs
 └── util.rs
@@ -33,6 +33,10 @@ src/                                  src/
   that opens `mod.rs` when clicked; the `mod.rs` file itself is hidden by default.
 - **Crate roots own their modules.** In a crate's `src/`, `lib.rs` (or `main.rs`)
   becomes the parent of the modules it declares, mirroring `crate::`.
+- **A row that expands still says which file it opens.** A module with submodules
+  looks like a folder, but clicking it opens Rust source, so the row names the file
+  behind it: `parser.rs`, `mod.rs`, or `lib.rs` for a crate root. Leaf modules are
+  files and nothing else, so they are left alone.
 - **Errors and warnings roll up.** A module row stands in for a directory VS Code
   cannot see, so the errors and warnings underneath it are counted onto the row: a
   collapsed `parser` shows how many problems live under `parser/`.

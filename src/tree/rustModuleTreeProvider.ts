@@ -6,6 +6,7 @@ import { declaredFileModules, isValidModuleName } from '../model/modDeclarations
 import {
   IMPLICIT_ROOTS,
   buildDirectoryModel,
+  moduleRowDescription,
   type DirEntry,
   type NodeModel
 } from '../model/moduleTree';
@@ -407,14 +408,17 @@ export class RustModuleTreeProvider implements vscode.TreeDataProvider<RustNode>
   }
 
   private descriptionOf(node: RustNode): string | undefined {
-    const parts: string[] = [];
-    if (node.props.style === 'mod-rs' && this.config.labelStyle === 'module') {
-      parts.push('mod.rs');
+    if (!node.isModule) {
+      return undefined;
     }
-    if (this.config.markUndeclaredModules && node.isUndeclared) {
-      parts.push('not declared');
-    }
-    return parts.length > 0 ? parts.join(' · ') : undefined;
+
+    const fileName = fileNameOf(node);
+    return moduleRowDescription({
+      fileName,
+      expandable: node.isExpandable,
+      labelIsFileName: this.labelOf(node) === fileName,
+      undeclared: this.config.markUndeclaredModules && node.isUndeclared
+    });
   }
 
   private tooltipOf(node: RustNode): vscode.MarkdownString {
@@ -423,6 +427,11 @@ export class RustModuleTreeProvider implements vscode.TreeDataProvider<RustNode>
 
     if (node.isModule) {
       tooltip.appendMarkdown(`\n\nModule \`${modulePathOf(node)}\``);
+      if (node.isExpandable) {
+        tooltip.appendMarkdown(
+          `\n\nClicking the row opens \`${fileNameOf(node)}\`; the arrow expands its submodules.`
+        );
+      }
       if (this.config.markUndeclaredModules && node.isUndeclared && node.props.ownerFile !== undefined) {
         const owner = vscode.workspace.asRelativePath(node.props.ownerFile, false);
         tooltip.appendMarkdown(
@@ -434,6 +443,11 @@ export class RustModuleTreeProvider implements vscode.TreeDataProvider<RustNode>
 
     return tooltip;
   }
+}
+
+/** Name of the file a row opens, e.g. `parser.rs` or `mod.rs`. */
+function fileNameOf(node: RustNode): string {
+  return node.resource.path.split('/').pop() ?? node.name;
 }
 
 /** Builds the Rust path of a module from its ancestry, e.g. `crate::parser::lexer`. */
