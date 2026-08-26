@@ -288,3 +288,38 @@ function sortNodes(
 
   return sorted.sort((a, b) => typeRank(a) - typeRank(b) || byName(a, b));
 }
+
+/** What the view knows about a module row when it comes to describe it. */
+export interface ModuleRow {
+  /** Name of the file a click on the row opens, e.g. `parser.rs` or `mod.rs`. */
+  readonly fileName: string;
+  /** The row has children, so it reads as a folder. */
+  readonly expandable: boolean;
+  /** The label already names the file, so repeating it says nothing. */
+  readonly labelIsFileName: boolean;
+  /** No `mod` statement declares the file, so Rust never compiles it. */
+  readonly undeclared: boolean;
+}
+
+/**
+ * The helper text shown after a module's label.
+ *
+ * A module that has submodules expands like a folder, but it is also a file:
+ * clicking it opens Rust source. Which file that is depends on the layout —
+ * `parser.rs` for `parser/`, `mod.rs` for `legacy/`, `lib.rs` for a crate root
+ * — so the row names it, and a row that looks like a folder stops hiding the
+ * code behind it. A leaf module is only ever a file and needs no such hint,
+ * and neither does a row already labelled with its file name.
+ */
+export function moduleRowDescription(row: ModuleRow): string | undefined {
+  const parts: string[] = [];
+
+  if (row.expandable && !row.labelIsFileName) {
+    parts.push(row.fileName);
+  }
+  if (row.undeclared) {
+    parts.push('not declared');
+  }
+
+  return parts.length > 0 ? parts.join(' · ') : undefined;
+}

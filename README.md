@@ -10,16 +10,16 @@ that sit in the *same* directory, so it cannot express the Rust module layout at
 Rust Explorer contributes its own **Rust Modules** view to the Explorer sidebar instead.
 
 ```
-src/                              src/
-├── legacy/                       └── lib             lib.rs
-│   ├── compat.rs                     ├── legacy      mod.rs
-│   └── mod.rs           ───▶         │   └── compat
-├── parser/                           ├── parser      parser.rs
-│   ├── ast.rs                        │   ├── ast
-│   └── lexer.rs                      │   └── lexer
-├── util/                             ├── util        util.rs
-│   └── text.rs                       │   └── text
-├── lib.rs                            └── scratch     not declared
+src/                                  src/
+├── legacy/                           └── lib               lib.rs
+│   ├── compat.rs                         ├── legacy        mod.rs
+│   └── mod.rs             ───▶           │   └── compat
+├── parser/                               ├── parser        parser.rs
+│   ├── ast.rs                            │   ├── ast
+│   └── lexer.rs                          │   └── lexer
+├── util/                                 ├── util          util.rs
+│   └── text.rs                           │   └── text
+├── lib.rs                                └── scratch       not declared
 ├── parser.rs
 ├── scratch.rs
 └── util.rs
@@ -35,9 +35,10 @@ src/                              src/
   becomes the parent of the modules it declares, mirroring `crate::`. `mod` there
   resolves against `src/` itself, so there is no `src/lib/`, and new modules are
   created next to the root.
-- **Module rows say which file they open.** A module that also stands for a directory
-  is otherwise indistinguishable from a plain folder, so the row carries the name of
-  the file behind it: `parser.rs`, or `mod.rs` for a 2015 edition module.
+- **A row that expands still says which file it opens.** A module with submodules
+  looks like a folder, but clicking it opens Rust source, so the row names the file
+  behind it: `parser.rs`, `mod.rs`, or `lib.rs` for a crate root. Leaf modules are
+  files and nothing else, so they are left alone.
 - **Errors and warnings roll up.** A module row stands in for a directory VS Code
   cannot see, so the errors and warnings underneath it are counted onto the row: a
   collapsed `parser` shows how many problems live under `parser/`.
@@ -67,7 +68,6 @@ available from the context menu.
 | `rustExplorer.nestCrateRoot` | `true` | Nest a crate's top-level modules under `lib.rs`/`main.rs`. |
 | `rustExplorer.hideModRs` | `true` | Hide `mod.rs` inside its own module directory. |
 | `rustExplorer.labelStyle` | `module` | Label rows with the module name (`parser`) or the file name (`parser.rs`). |
-| `rustExplorer.showModuleFileHint` | `true` | Show the file a module row opens (`parser.rs`, `mod.rs`) next to modules that also stand for a directory. |
 | `rustExplorer.showNonRustFiles` | `true` | Show `Cargo.toml`, `README.md` and friends alongside modules. |
 | `rustExplorer.markUndeclaredModules` | `true` | Mark `.rs` files no `mod` statement declares. |
 | `rustExplorer.rollUpProblems` | `true` | Count the errors and warnings inside a module onto its row. |

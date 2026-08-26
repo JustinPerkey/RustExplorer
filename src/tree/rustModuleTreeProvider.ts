@@ -6,6 +6,7 @@ import { declaredFileModules, isValidModuleName } from '../model/modDeclarations
 import {
   IMPLICIT_ROOTS,
   buildDirectoryModel,
+  moduleRowDescription,
   submoduleDirectoryOf,
   type DirEntry,
   type NodeModel
@@ -421,31 +422,17 @@ export class RustModuleTreeProvider implements vscode.TreeDataProvider<RustNode>
   }
 
   private descriptionOf(node: RustNode): string | undefined {
-    const parts: string[] = [];
-    const fileHint = this.fileHintOf(node);
-    if (fileHint !== undefined) {
-      parts.push(fileHint);
-    }
-    if (this.config.markUndeclaredModules && node.isUndeclared) {
-      parts.push('not declared');
-    }
-    return parts.length > 0 ? parts.join(' · ') : undefined;
-  }
-
-  /**
-   * The file a module row opens, shown next to rows that also stand for a
-   * directory. `parser` and a plain `parser/` directory otherwise look the
-   * same, so the row that has code behind it says which file that is.
-   */
-  private fileHintOf(node: RustNode): string | undefined {
-    if (!node.isModule || !this.config.showModuleFileHint || !node.isExpandable) {
+    if (!node.isModule) {
       return undefined;
     }
-    if (node.props.style === 'mod-rs') {
-      return 'mod.rs';
-    }
-    // The file style label already is the file name.
-    return this.config.labelStyle === 'file' ? undefined : `${node.name}.rs`;
+
+    const fileName = fileNameOf(node);
+    return moduleRowDescription({
+      fileName,
+      expandable: node.isExpandable,
+      labelIsFileName: this.labelOf(node) === fileName,
+      undeclared: this.config.markUndeclaredModules && node.isUndeclared
+    });
   }
 
   private tooltipOf(node: RustNode): vscode.MarkdownString {
@@ -454,6 +441,11 @@ export class RustModuleTreeProvider implements vscode.TreeDataProvider<RustNode>
 
     if (node.isModule) {
       tooltip.appendMarkdown(`\n\nModule \`${modulePathOf(node)}\``);
+      if (node.isExpandable) {
+        tooltip.appendMarkdown(
+          `\n\nClicking the row opens \`${fileNameOf(node)}\`; the arrow expands its submodules.`
+        );
+      }
       if (this.config.markUndeclaredModules && node.isUndeclared && node.props.ownerFile !== undefined) {
         const owner = vscode.workspace.asRelativePath(node.props.ownerFile, false);
         tooltip.appendMarkdown(
@@ -465,6 +457,11 @@ export class RustModuleTreeProvider implements vscode.TreeDataProvider<RustNode>
 
     return tooltip;
   }
+}
+
+/** Name of the file a row opens, e.g. `parser.rs` or `mod.rs`. */
+function fileNameOf(node: RustNode): string {
+  return node.resource.path.split('/').pop() ?? node.name;
 }
 
 /** Builds the Rust path of a module from its ancestry, e.g. `crate::parser::lexer`. */

@@ -194,11 +194,6 @@
           ],
           "description": "How module rows are labelled."
         },
-        "rustExplorer.showModuleFileHint": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Show the file a module row opens (`parser.rs`, `mod.rs`) next to modules that also stand for a directory. Without it a module row and a plain directory of the same name look alike, so there is no telling that the folder has a module file behind it."
-        },
         "rustExplorer.showNonRustFiles": {
           "type": "boolean",
           "default": true,

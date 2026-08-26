@@ -11,7 +11,6 @@ export interface RustExplorerConfig extends BuildOptions {
   readonly rollUpProblems: boolean;
   readonly followActiveEditor: boolean;
   readonly labelStyle: LabelStyle;
-  readonly showModuleFileHint: boolean;
   readonly exclude: Readonly<Record<string, boolean>>;
 }
 
@@ -27,7 +26,6 @@ export function readConfig(scope?: vscode.Uri): RustExplorerConfig {
     rollUpProblems: config.get<boolean>('rollUpProblems', true),
     followActiveEditor: config.get<boolean>('followActiveEditor', true),
     labelStyle: config.get<LabelStyle>('labelStyle', 'module'),
-    showModuleFileHint: config.get<boolean>('showModuleFileHint', true),
     exclude: config.get<Record<string, boolean>>('exclude', {})
   };
 }

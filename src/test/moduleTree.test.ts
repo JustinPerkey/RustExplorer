@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import {
   DEFAULT_BUILD_OPTIONS,
   buildDirectoryModel,
+  moduleRowDescription,
   submoduleDirectoryOf,
   type BuildInput,
   type BuildOptions,
@@ -298,5 +299,40 @@ describe('submoduleDirectoryOf', () => {
   it('has no directory for a file that is not a module', () => {
     assert.equal(submoduleDirectoryOf('Cargo.toml'), undefined);
     assert.equal(submoduleDirectoryOf('my-notes.rs'), undefined);
+  });
+});
+
+describe('moduleRowDescription', () => {
+  const row = (overrides: Partial<Parameters<typeof moduleRowDescription>[0]> = {}) =>
+    moduleRowDescription({
+      fileName: 'parser.rs',
+      expandable: true,
+      labelIsFileName: false,
+      undeclared: false,
+      ...overrides
+    });
+
+  it('names the file a folder-like row opens', () => {
+    assert.equal(row(), 'parser.rs');
+  });
+
+  it('names a mod.rs the module directory stands for', () => {
+    assert.equal(row({ fileName: 'mod.rs' }), 'mod.rs');
+  });
+
+  it('says nothing for a leaf module, which is only ever a file', () => {
+    assert.equal(row({ expandable: false }), undefined);
+  });
+
+  it('does not repeat a label that already names the file', () => {
+    assert.equal(row({ labelIsFileName: true }), undefined);
+  });
+
+  it('keeps marking an undeclared leaf module', () => {
+    assert.equal(row({ expandable: false, undeclared: true }), 'not declared');
+  });
+
+  it('names the file and the missing declaration together', () => {
+    assert.equal(row({ undeclared: true }), 'parser.rs \u00b7 not declared');
   });
 });
