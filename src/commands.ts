@@ -94,7 +94,7 @@ export async function revealUri(
 // -- New module -------------------------------------------------------------
 
 async function newModule(provider: RustModuleTreeProvider, node: RustNode | undefined): Promise<void> {
-  const target = await resolveTarget(node);
+  const target = await resolveTarget(provider, node);
   if (target === undefined) {
     void vscode.window.showWarningMessage('Rust Explorer: open a folder before creating a module.');
     return;
@@ -154,10 +154,16 @@ async function prepareDeclaration(
   return owner;
 }
 
-async function resolveTarget(node: RustNode | undefined): Promise<ModuleTarget | undefined> {
+async function resolveTarget(
+  provider: RustModuleTreeProvider,
+  node: RustNode | undefined
+): Promise<ModuleTarget | undefined> {
+  // Where a module's own submodules go is not always `<name>/`: a crate root
+  // declares them next to itself, so `mod` in `src/lib.rs` means `src/foo.rs`
+  // and never `src/lib/foo.rs`.
   if (node?.isModule) {
     return {
-      dir: node.props.moduleDir ?? vscode.Uri.joinPath(node.props.containerDir, node.name),
+      dir: node.props.moduleDir ?? (await provider.moduleContentDirectory(node.resource)),
       ownerFile: node.resource
     };
   }
@@ -173,13 +179,7 @@ async function resolveTarget(node: RustNode | undefined): Promise<ModuleTarget |
   // No selection: fall back to the active Rust file, then to the workspace.
   const active = vscode.window.activeTextEditor?.document.uri;
   if (active !== undefined && active.path.endsWith('.rs')) {
-    const dir = vscode.Uri.joinPath(active, '..');
-    const stem = active.path.split('/').pop()?.slice(0, -'.rs'.length) ?? '';
-    const isRoot = stem === 'lib' || stem === 'main' || stem === 'mod';
-    return {
-      dir: isRoot ? dir : vscode.Uri.joinPath(dir, stem),
-      ownerFile: active
-    };
+    return { dir: await provider.moduleContentDirectory(active), ownerFile: active };
   }
 
   const folder = vscode.workspace.workspaceFolders?.[0];

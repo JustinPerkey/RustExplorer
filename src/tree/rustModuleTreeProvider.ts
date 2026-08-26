@@ -7,6 +7,7 @@ import {
   IMPLICIT_ROOTS,
   buildDirectoryModel,
   moduleRowDescription,
+  submoduleDirectoryOf,
   type DirEntry,
   type NodeModel
 } from '../model/moduleTree';
@@ -290,6 +291,19 @@ export class RustModuleTreeProvider implements vscode.TreeDataProvider<RustNode>
     }
 
     return vscode.Uri.joinPath(dir, stem);
+  }
+
+  /**
+   * The directory a `mod` declaration written in `file` resolves against, and
+   * therefore where a new submodule of `file` belongs: `parser/` for
+   * `src/parser.rs`, the crate's own `src` for `src/lib.rs`, and its own
+   * directory for a `mod.rs`. The directory need not exist yet.
+   */
+  async moduleContentDirectory(file: vscode.Uri): Promise<vscode.Uri> {
+    const name = file.path.split('/').pop() ?? '';
+    const dir = vscode.Uri.joinPath(file, '..');
+    const subdirectory = submoduleDirectoryOf(name, await this.isCrateSourceDir(dir));
+    return subdirectory === undefined ? dir : vscode.Uri.joinPath(dir, subdirectory);
   }
 
   /** The file a crate's top level modules are nested under: `lib.rs`, else `main.rs`. */

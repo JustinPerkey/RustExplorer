@@ -76,8 +76,14 @@ export interface BuildInput {
   readonly isModuleDirectory?: boolean;
 }
 
+/**
+ * Crate roots, whose `mod` declarations resolve to files sitting *beside* them:
+ * `mod parser;` in `src/lib.rs` is `src/parser.rs`, never `src/lib/parser.rs`.
+ */
+export const CRATE_ROOT_MODULES: ReadonlySet<string> = new Set(['lib', 'main']);
+
 /** Files that are compiled without ever being declared by a `mod` statement. */
-export const IMPLICIT_ROOTS: ReadonlySet<string> = new Set(['lib', 'main', 'build']);
+export const IMPLICIT_ROOTS: ReadonlySet<string> = new Set([...CRATE_ROOT_MODULES, 'build']);
 
 export function moduleNameOf(fileName: string): string | undefined {
   if (!fileName.endsWith('.rs')) {
@@ -85,6 +91,23 @@ export function moduleNameOf(fileName: string): string | undefined {
   }
   const stem = fileName.slice(0, -'.rs'.length);
   return isValidModuleName(stem) ? stem : undefined;
+}
+
+/**
+ * The directory the `mod` declarations written in `fileName` resolve against,
+ * named relative to the directory `fileName` itself sits in: `parser.rs` owns
+ * `parser/`. `undefined` means that same directory, which is where a `mod.rs`
+ * and a crate root (`src/lib.rs`, `src/main.rs`) declare their modules.
+ */
+export function submoduleDirectoryOf(fileName: string, isCrateSourceDir = false): string | undefined {
+  if (fileName === 'mod.rs') {
+    return undefined;
+  }
+  const name = moduleNameOf(fileName);
+  if (name === undefined || (isCrateSourceDir && CRATE_ROOT_MODULES.has(name))) {
+    return undefined;
+  }
+  return name;
 }
 
 export function buildDirectoryModel(input: BuildInput, options: BuildOptions): NodeModel[] {

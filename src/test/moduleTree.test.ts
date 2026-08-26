@@ -5,6 +5,7 @@ import {
   DEFAULT_BUILD_OPTIONS,
   buildDirectoryModel,
   moduleRowDescription,
+  submoduleDirectoryOf,
   type BuildInput,
   type BuildOptions,
   type DirEntry,
@@ -266,6 +267,38 @@ describe('buildDirectoryModel', () => {
       nodes.map((node) => node.name),
       ['gamma', 'alpha', 'beta', 'Cargo.toml']
     );
+  });
+});
+
+describe('submoduleDirectoryOf', () => {
+  it('gives a module file the directory named after it', () => {
+    assert.equal(submoduleDirectoryOf('parser.rs'), 'parser');
+    assert.equal(submoduleDirectoryOf('parser.rs', true), 'parser');
+  });
+
+  it('keeps a crate root declaring into its own directory', () => {
+    for (const name of ['lib.rs', 'main.rs']) {
+      assert.equal(submoduleDirectoryOf(name, true), undefined, name);
+    }
+  });
+
+  it('treats lib.rs outside a crate source directory as an ordinary module', () => {
+    assert.equal(submoduleDirectoryOf('lib.rs'), 'lib');
+    assert.equal(submoduleDirectoryOf('main.rs'), 'main');
+  });
+
+  it('keeps mod.rs declaring into its own directory', () => {
+    assert.equal(submoduleDirectoryOf('mod.rs'), undefined);
+    assert.equal(submoduleDirectoryOf('mod.rs', true), undefined);
+  });
+
+  it('gives build.rs a directory: only lib.rs and main.rs root a crate', () => {
+    assert.equal(submoduleDirectoryOf('build.rs', true), 'build');
+  });
+
+  it('has no directory for a file that is not a module', () => {
+    assert.equal(submoduleDirectoryOf('Cargo.toml'), undefined);
+    assert.equal(submoduleDirectoryOf('my-notes.rs'), undefined);
   });
 });
 

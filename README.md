@@ -32,7 +32,9 @@ src/                                  src/
 - **`name/mod.rs` works too.** A directory with a `mod.rs` is shown as one module row
   that opens `mod.rs` when clicked; the `mod.rs` file itself is hidden by default.
 - **Crate roots own their modules.** In a crate's `src/`, `lib.rs` (or `main.rs`)
-  becomes the parent of the modules it declares, mirroring `crate::`.
+  becomes the parent of the modules it declares, mirroring `crate::`. `mod` there
+  resolves against `src/` itself, so there is no `src/lib/`, and new modules are
+  created next to the root.
 - **A row that expands still says which file it opens.** A module with submodules
   looks like a folder, but clicking it opens Rust source, so the row names the file
   behind it: `parser.rs`, `mod.rs`, or `lib.rs` for a crate root. Leaf modules are
@@ -49,7 +51,7 @@ src/                                  src/
 
 | Command | What it does |
 | --- | --- |
-| `Rust Explorer: New Module...` | Creates `<name>.rs` under the selected module (creating its directory if needed) and adds `mod <name>;` to the owning file. |
+| `Rust Explorer: New Module...` | Creates `<name>.rs` where the selected module's `mod` declarations resolve — its own directory, created if needed, or the crate's `src/` for `lib.rs`/`main.rs` — and adds `mod <name>;` to it. |
 | `Rust Explorer: Rename...` | Renames the module file, its directory and its `mod` declaration together. |
 | `Rust Explorer: Delete` | Deletes the module file and its directory, and removes the `mod` declaration. |
 | `Rust Explorer: Add mod Declaration` | Declares an undeclared `.rs` file in its owning module. |
