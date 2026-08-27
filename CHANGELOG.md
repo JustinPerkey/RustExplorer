@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0
+
+- **Rows drag out of the view.** Drag a module or a file onto the editor area to open it,
+  onto the side of an editor to open it in a split, or onto a terminal to get its path.
+  Dropping onto the view still does nothing — moving a module by dragging it is not
+  implemented yet.
+- **A row that expands says which file it opens.** A module with submodules looks like a
+  folder, but clicking it opens Rust source, so the row now names the file behind it:
+  `parser.rs`, `mod.rs`, or `lib.rs` for a crate root. Leaf modules are files and nothing
+  else, so they are left alone.
+- **New modules are created beside a crate root, not inside `src/lib/`.** `mod` in
+  `src/lib.rs` (or `src/main.rs`) resolves against `src/` itself, so **New Module...** on
+  a crate root now writes `src/<name>.rs` instead of inventing a `src/lib/` directory that
+  Rust would never compile.
+
 ## 0.2.0
 
 - **Errors and warnings roll up onto module rows.** A module row now carries the problems

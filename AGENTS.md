@@ -104,11 +104,31 @@ undoable step (<kbd>Ctrl</kbd>+<kbd>Z</kbd> should put everything back).
 
 ## Docs and releases
 
-`CHANGELOG.md` sections are written at release time by `scripts/changelog.js` from the
-commit subjects since the last tag, unless a section for that version already exists.
-So write commit subjects that read as changelog lines ("Create new modules beside a
-crate root, not inside `src/lib/`"), and update `README.md` in the same commit when
-behaviour, a command or a setting changes.
+Update `README.md` in the same commit as the change when behaviour, a command or a
+setting changes — the README is the marketplace page, so a release that ships behaviour
+the README does not describe is a release with a stale listing.
 
-Releases run from **Actions → Release**; `package.json` and `CHANGELOG.md` are bumped by
-the workflow. Do not bump the version by hand.
+### Cutting a release
+
+Two steps, in this order — the workflow can do the whole thing on its own, but then the
+release notes are raw commit subjects, which is not what ships.
+
+1. **A release PR.** On a branch: `npm version <x.y.z> --no-git-tag-version` (never `npm
+   version` on its own — no tag, no commit), then write the `## <x.y.z>` section of
+   `CHANGELOG.md` by hand, in the voice of the sections above it: what changed for
+   someone using the extension, not what the commits did. Pre-1.0, anything user-facing
+   and new is a minor bump; fixes alone are a patch. Merge it to `main`.
+2. **Actions → Release**, run from `main`, with **version** set to the exact version the
+   PR landed (leave **bump** alone; it is ignored when **version** is set). The workflow
+   re-runs lint, compile and test, sees `package.json` is already there, reuses the
+   `CHANGELOG.md` section verbatim as the release notes, then commits, tags `v<x.y.z>`,
+   pushes and publishes the GitHub release with the `.vsix` attached. `dry_run` does
+   everything except push and publish.
+
+`scripts/changelog.js` only writes a section when the version is undocumented, and it
+builds it from commit subjects since the last tag, skipping merges. That fallback is
+what step 1 exists to avoid — but it is also why commit subjects should read as
+changelog lines ("Create new modules beside a crate root, not inside `src/lib/`").
+
+The tag has to be new: re-running the workflow for a version that already shipped fails
+on `Tag v<x.y.z> already exists`, deliberately.
