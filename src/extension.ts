@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 
 import { registerCommands, revealUri } from './commands';
 import { CONFIG_SECTION, readConfig } from './config';
+import { RustModuleDragController } from './tree/dragAndDrop';
 import { ModuleProblemDecorationProvider } from './tree/problemDecorations';
 import { RustModuleTreeProvider } from './tree/rustModuleTreeProvider';
 import type { RustNode } from './tree/rustNode';
@@ -12,6 +13,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const provider = new RustModuleTreeProvider();
   const view = vscode.window.createTreeView<RustNode>('rustExplorer.modules', {
     treeDataProvider: provider,
+    dragAndDropController: new RustModuleDragController(),
     showCollapseAll: true
   });
 

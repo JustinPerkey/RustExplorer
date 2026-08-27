@@ -46,6 +46,8 @@ src/                                  src/
   marked `not declared`, because Rust never compiles it.
 - **Module-aware editing.** Create, rename and delete modules and the `mod` declaration,
   the file and the module directory are kept in sync in a single undoable step.
+- **Rows drag out.** Drag a module or a file onto the editor area to open it, including
+  onto the side of an editor to split, or onto a terminal to get its path.
 
 ## Commands
 
@@ -140,4 +142,5 @@ the file operations.
 - `#[path = "..."]` attributes are not followed; nesting is based on the file layout.
 - The built-in Explorer is unchanged — VS Code does not allow extensions to alter it.
   Rust Explorer adds its own view, which you can drag anywhere in the sidebar.
-- Drag and drop between modules is not implemented yet.
+- Rows can be dragged out of the view, but dropping onto it does nothing: moving a
+  module by dragging it onto another one is not implemented yet.
